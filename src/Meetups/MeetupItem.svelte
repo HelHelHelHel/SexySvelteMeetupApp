@@ -1,34 +1,43 @@
 <script>
-  import Button from '../UI/Button.svelte';
+  import { createEventDispatcher } from "svelte";
+  
+  import meetups from "./meetups-store.js";
+  import Button from "../UI/Button.svelte";
+  import Badge from "../UI/Badge.svelte";
+  import LoadingSpinner from "../UI/LoadingSpinner.svelte";
 
-    export let title;
-    export let subtitle;
-    export let imageUrl;
-    export let description;
-    export let address;
-    export let contactEmail;
+  export let id;
+  export let title;
+  export let subtitle;
+  export let imageUrl;
+  export let description;
+  export let address;
+  export let email;
+  export let isFav;
+
+  let isLoading = false;
+  const dispatch = createEventDispatcher();
+
+  function toggleFavorite() {
+    isLoading = true;
+    fetch(`https://svelte-meetups-5b081.firebaseio.com/meetups/${id}.json`, {
+        method: 'PATCH',
+        body: JSON.stringify({isFavorite: !isFav}),
+        headers: {'Content-Type': 'application/json'}
+      })
+      .then(res => {
+          if(!res.ok) {
+            throw new Error('error');
+          }
+          isLoading = false;
+          meetups.toggleFavorite(id);
+        })
+        .catch(err => {
+          console.log(err)
+        })
     
+  }
 </script>
-
-<article>
-    <header>
-        <h1>{title}</h1>
-        <h3>{subtitle}</h3>
-        <h5>{address}</h5>
-    </header>
-        <div class="image">
-            <img src="{imageUrl}" alt="{title}">
-        </div>
-        <div class="content">
-            <p>{description}</p>
-        </div>
-        <footer>
-            <Button href="mailto:{contactEmail}" caption='Contact' />
-            <Button mode='outline' type='button' caption='Show Details' />
-            <Button type='button' caption='Favourites' />
-            
-        </footer>
-</article>
 
 <style>
   article {
@@ -82,4 +91,46 @@
   div {
     text-align: right;
   }
+
+  .content {
+    height: 4rem;
+  }
 </style>
+
+<article >
+  <header>
+    <h1>
+      {title}
+      {#if isFav}
+        <Badge>FAVORITE</Badge>
+      {/if}
+    </h1>
+    <h2>{subtitle}</h2>
+    <p>{address}</p>
+  </header>
+  <div class="image">
+    <img src={imageUrl} alt={title} />
+  </div>
+  <div class="content">
+    <p>{description}</p>
+  </div>
+  <footer>
+    <Button mode="outline" type="button" on:click={() => dispatch('edit', id)}>
+      Edit
+    </Button>
+    {#if isLoading}
+      <span>Changing...</span>
+    {:else}
+    <Button
+      mode="outline"
+      color={isFav ? null : 'success'}
+      type="button"
+      on:click={toggleFavorite}>
+      {isFav ? 'Unfavorite' : 'Favorite'}
+    </Button>
+    {/if}
+    <Button type="button" on:click={() => dispatch('showdetails', id)}>
+      Show Details
+    </Button>
+  </footer>
+</article>

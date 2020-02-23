@@ -1,18 +1,13 @@
 <script>
-    export let type;
-    export let caption;
-    export let href;
-    export let mode;
+  export let type = "button";
+  export let href = null;
+  export let mode = null;
+  export let color = null;
+  export let disabled = false;
 </script>
 
-{#if href}
-<a href={href}>{caption}</a>
-{:else}
-<button class="{mode}" type={type}>{caption}</button>
-{/if}
-
 <style>
-button,
+  button,
   a {
     font: inherit;
     border: 1px solid #cf0056;
@@ -88,3 +83,13 @@ button,
     background: #c2ffd1;
   }
 </style>
+
+{#if href}
+  <a {href}>
+    <slot />
+  </a>
+{:else}
+  <button class="{mode} {color}" {type} on:click {disabled}>
+    <slot />
+  </button>
+{/if}
